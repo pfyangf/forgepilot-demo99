@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>九九乘法表验收检查</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --pass: #1d7a4d;
+      --fail: #b42318;
+      --ink: #23302f;
+      --muted: #66716e;
+      --line: #d9d2c7;
+      --paper: #fffdf8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 32px 16px;
+      color: var(--ink);
+      background: #f7f1e7;
+      font: 15px/1.65 "Avenir Next", "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(100%, 760px);
+      margin: 0 auto;
+      padding: 28px;
+      border-radius: 16px;
+      background: var(--paper);
+      box-shadow: 0 20px 50px rgba(87, 62, 38, 0.12);
+    }
+
+    h1 { margin: 0 0 8px; font-family: "Noto Serif SC", "Songti SC", serif; }
+    .lead { margin: 0 0 24px; color: var(--muted); }
+    .summary { margin-bottom: 18px; font-weight: 700; }
+    .summary.pass { color: var(--pass); }
+    .summary.fail { color: var(--fail); }
+    ul { margin: 0; padding: 0; list-style: none; }
+    li { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+    .status { flex: 0 0 auto; font-weight: 700; }
+    .status.pass { color: var(--pass); }
+    .status.fail { color: var(--fail); }
+    .detail { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>九九乘法表验收检查</h1>
+    <p class="lead">此页通过 iframe 加载 <code>../index.html</code>，自动核对数量、算式与结果。</p>
+    <p class="summary" id="summary">正在检查…</p>
+    <ul id="results"></ul>
+  </main>
+
+  <iframe id="target" src="../index.html" title="待验收的九九乘法表页面" hidden></iframe>
+
+  <script>
+    const checks = [];
+
+    function check(name, passed, detail = "") {
+      checks.push({ name, passed, detail });
+    }
+
+    function render() {
+      const failed = checks.filter((item) => !item.passed);
+      const summary = document.getElementById("summary");
+      summary.className = `summary ${failed.length === 0 ? "pass" : "fail"}`;
+      summary.textContent = failed.length === 0
+        ? `全部通过：${checks.length} 项检查`
+        : `存在失败：${failed.length} / ${checks.length} 项`;
+
+      document.getElementById("results").innerHTML = checks.map((item) => `
+        <li>
+          <span class="status ${item.passed ? "pass" : "fail"}">${item.passed ? "PASS" : "FAIL"}</span>
+          <span>${item.name}${item.detail ? `<br><span class="detail">${item.detail}</span>` : ""}</span>
+        </li>
+      `).join("");
+    }
+
+    document.getElementById("target").addEventListener("load", (event) => {
+      try {
+        const doc = event.currentTarget.contentDocument;
+        const equations = [...doc.querySelectorAll(".equation")];
+        const rows = [...doc.querySelectorAll(".row")];
+        const expected = [];
+
+        for (let multiplier = 1; multiplier <= 9; multiplier += 1) {
+          for (let multiplicand = 1; multiplicand <= multiplier; multiplicand += 1) {
+            expected.push({ multiplier, multiplicand, product: multiplier * multiplicand });
+          }
+        }
+
+        check("页面包含 9 行", rows.length === 9, `实际 ${rows.length} 行`);
+        check("页面包含 45 个算式", equations.length === 45, `实际 ${equations.length} 个`);
+
+        const texts = equations.map((equation) => equation.textContent.trim());
+        const expectedTexts = expected.map(({ multiplier, multiplicand, product }) =>
+          `${multiplier} × ${multiplicand} = ${product}`
+        );
+        check("算式顺序与文本完整正确", JSON.stringify(texts) === JSON.stringify(expectedTexts));
+
+        const badValues = equations.filter((equation) => {
+          const match = equation.textContent.match(/^\s*(\d)\s*×\s*(\d)\s*=\s*(\d+)\s*$/);
+          return !match || Number(match[1]) * Number(match[2]) !== Number(match[3]);
+        });
+        check("乘数与乘积运算正确", badValues.length === 0, badValues.length ? `${badValues.length} 个错误算式` : "1×1 至 9×9 全部正确");
+
+        const first = equations[0]?.textContent.trim();
+        const last = equations[equations.length - 1]?.textContent.trim();
+        check("覆盖首尾算式", first === "1 × 1 = 1" && last === "9 × 9 = 81", `首项 ${first}；末项 ${last}`);
+        check("统计信息显示 45 个算式", doc.getElementById("stats")?.textContent.includes("45"), doc.getElementById("stats")?.textContent);
+        check("每个算式可键盘聚焦", equations.every((equation) => equation.tagName === "BUTTON"));
+      } catch (error) {
+        check("加载页面并执行检查", false, String(error));
+      }
+
+      render();
+    });
+  </script>
+</body>
+</html>

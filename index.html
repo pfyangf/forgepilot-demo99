@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="可直接在浏览器中打开的九九乘法表页面">
+  <title>九九乘法表</title>
+  <style>
+    :root {
+      --ink: #23302f;
+      --ink-soft: #66716e;
+      --paper: #fffaf2;
+      --paper-card: rgba(255, 252, 246, 0.88);
+      --accent: #d9613c;
+      --accent-deep: #b84a2a;
+      --accent-soft: rgba(217, 97, 60, 0.12);
+      --line: rgba(163, 139, 113, 0.28);
+      --shadow: 0 24px 60px rgba(87, 62, 38, 0.14);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: #f7f1e7;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: clamp(24px, 5vw, 64px) clamp(14px, 4vw, 48px);
+      color: var(--ink);
+      font-family: "Noto Serif SC", "Songti SC", "STSong", Georgia, serif;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(217, 97, 60, 0.14), transparent 30%),
+        radial-gradient(circle at 88% 92%, rgba(140, 168, 148, 0.16), transparent 34%),
+        linear-gradient(145deg, #f7f1e7 0%, #efe5d6 100%);
+    }
+
+    .page {
+      width: min(100%, 1080px);
+      margin: 0 auto;
+    }
+
+    .card {
+      padding: clamp(24px, 4vw, 48px);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: calc(var(--radius) + 8px);
+      background: var(--paper-card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .masthead {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: clamp(22px, 4vw, 38px);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent-deep);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      line-height: 1.1;
+    }
+
+    .masthead p:last-child {
+      margin: 14px 0 0;
+      color: var(--ink-soft);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .range-badge {
+      flex: 0 0 auto;
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--accent-deep);
+      background: rgba(255, 250, 242, 0.82);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      font-size: 0.86rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .table-wrap {
+      position: relative;
+      padding: 10px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .multiplication-table {
+      display: grid;
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0;
+      padding: 22px 0;
+      list-style: none;
+    }
+
+    .row {
+      display: contents;
+    }
+
+    .equation {
+      display: flex;
+      min-height: 56px;
+      padding: 10px 8px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--ink);
+      background: var(--paper);
+      font: inherit;
+      font-size: clamp(0.78rem, 1.55vw, 1.05rem);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.25;
+      text-align: center;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease,
+        background-color 160ms ease;
+    }
+
+    .equation:hover {
+      border-color: var(--accent);
+      background: #fffdf8;
+      box-shadow: 0 10px 22px rgba(184, 74, 42, 0.14);
+      transform: translateY(-2px);
+    }
+
+    .equation:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .equation.is-active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      box-shadow: inset 0 0 0 1px var(--accent);
+      transform: scale(0.97);
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 20px;
+      color: var(--ink-soft);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      font-size: 0.86rem;
+      line-height: 1.6;
+    }
+
+    .footer p {
+      margin: 0;
+    }
+
+    .stats {
+      color: var(--accent-deep);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    noscript {
+      display: block;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border: 1px solid #e9b8a6;
+      border-radius: 12px;
+      color: #7d2d18;
+      background: #fff0ea;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+    }
+
+    @media (max-width: 760px) {
+      .masthead {
+        flex-direction: column;
+      }
+
+      .multiplication-table {
+        gap: 6px;
+      }
+
+      .table-wrap {
+        padding: 6px;
+      }
+
+      .equation {
+        min-height: 44px;
+        padding: 7px 3px;
+        border-radius: 9px;
+        font-size: clamp(0.56rem, 1.8vw, 0.82rem);
+      }
+
+      .footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 12px 8px 24px;
+      }
+
+      .card {
+        padding: 20px 12px;
+        border-radius: 18px;
+      }
+
+      .multiplication-table {
+        gap: 3px;
+      }
+
+      .table-wrap {
+        padding: 3px;
+      }
+
+      .equation {
+        min-height: 36px;
+        border-radius: 7px;
+        font-size: clamp(0.45rem, 1.8vw, 0.68rem);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .equation {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card" aria-labelledby="page-title">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">ForgePilot Demo · REQ-DEMO99-2</p>
+          <h1 id="page-title">九九乘法表</h1>
+          <p>从一乘一到九乘九，循序渐进地看见每一行。</p>
+        </div>
+        <span class="range-badge">1 × 1 → 9 × 9</span>
+      </header>
+
+      <div class="table-wrap">
+        <ol class="multiplication-table" id="multiplication-table" aria-label="1 到 9 的九九乘法表"></ol>
+      </div>
+
+      <noscript>请启用 JavaScript 以生成完整九九乘法表。</noscript>
+
+      <footer class="footer">
+        <p>点击任意算式可高亮；使用 Tab 键可逐项浏览。</p>
+        <p class="stats" id="stats">45 个算式 · 覆盖 1–9</p>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    const table = document.getElementById("multiplication-table");
+    const stats = document.getElementById("stats");
+    const chineseDigits = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+    let equationCount = 0;
+
+    function toChineseNumber(value) {
+      if (value < 10) return chineseDigits[value];
+      if (value < 20) return `十${value % 10 === 0 ? "" : chineseDigits[value % 10]}`;
+      if (value < 100) {
+        const tens = Math.floor(value / 10);
+        const ones = value % 10;
+        return `${chineseDigits[tens]}十${ones === 0 ? "" : chineseDigits[ones]}`;
+      }
+      return String(value);
+    }
+
+    function equationLabel(multiplier, multiplicand, product) {
+      return `${toChineseNumber(multiplier)}乘${toChineseNumber(multiplicand)}等于${toChineseNumber(product)}`;
+    }
+
+    function clearActive() {
+      table.querySelectorAll(".is-active").forEach((equation) => {
+        equation.classList.remove("is-active");
+      });
+    }
+
+    for (let multiplier = 1; multiplier <= 9; multiplier += 1) {
+      const row = document.createElement("li");
+      row.className = "row";
+      row.setAttribute("role", "presentation");
+
+      for (let multiplicand = 1; multiplicand <= multiplier; multiplicand += 1) {
+        const product = multiplier * multiplicand;
+        const equation = document.createElement("button");
+        equation.className = "equation";
+        equation.type = "button";
+        equation.textContent = `${multiplier} × ${multiplicand} = ${product}`;
+        equation.setAttribute("aria-label", equationLabel(multiplier, multiplicand, product));
+        equation.dataset.product = String(product);
+
+        equation.addEventListener("click", () => {
+          clearActive();
+          equation.classList.add("is-active");
+        });
+
+        row.appendChild(equation);
+        equationCount += 1;
+      }
+
+      table.appendChild(row);
+    }
+
+    stats.textContent = `${equationCount} 个算式 · 覆盖 1–9`;
+  </script>
+</body>
+</html>
