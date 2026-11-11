@@ -113,6 +113,19 @@
         check("覆盖首尾算式", first === "1 × 1 = 1" && last === "9 × 9 = 81", `首项 ${first}；末项 ${last}`);
         check("统计信息显示 45 个算式", doc.getElementById("stats")?.textContent.includes("45"), doc.getElementById("stats")?.textContent);
         check("每个算式可键盘聚焦", equations.every((equation) => equation.tagName === "BUTTON"));
+
+        const rowCounts = rows.map((row) => row.querySelectorAll(".equation").length);
+        check(
+          "每行单元格数形成 1 到 9 的下三角",
+          JSON.stringify(rowCounts) === JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9]),
+          `各行单元格数：${rowCounts.join(", ")}`
+        );
+        const brokenRows = rows.filter((row) => getComputedStyle(row).display === "contents");
+        check(
+          "每行保持独立网格以留出右上三角空白",
+          brokenRows.length === 0,
+          brokenRows.length ? `${brokenRows.length} 行仍使用 display:contents` : "行布局已拆分为独立 9 列网格"
+        );
       } catch (error) {
         check("加载页面并执行检查", false, String(error));
       }

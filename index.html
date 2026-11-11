@@ -110,8 +110,8 @@
     }
 
     .multiplication-table {
-      display: grid;
-      grid-template-columns: repeat(9, minmax(0, 1fr));
+      display: flex;
+      flex-direction: column;
       gap: 10px;
       margin: 0;
       padding: 22px 0;
@@ -119,7 +119,9 @@
     }
 
     .row {
-      display: contents;
+      display: grid;
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      gap: 10px;
     }
 
     .equation {
@@ -200,7 +202,8 @@
         flex-direction: column;
       }
 
-      .multiplication-table {
+      .multiplication-table,
+      .row {
         gap: 6px;
       }
 
@@ -231,7 +234,8 @@
         border-radius: 18px;
       }
 
-      .multiplication-table {
+      .multiplication-table,
+      .row {
         gap: 3px;
       }
 
